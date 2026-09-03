@@ -32,7 +32,7 @@ No uploads. No servers. No tracking. Everything happens on your device.
 
 ## 🚀 Live Demo
 
-[Try it here](https://meta.subhajitmaji.me)
+[Try it here](https://meta-glass-converter.pages.dev)
 
 ---
 
