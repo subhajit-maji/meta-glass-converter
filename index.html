@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meta Glasses">
+<title>Meta Glasses Converter — Mobile First</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/piexifjs/1.0.6/piexif.js"></script>
+<style>
+:root {
+  --bg: #070a12;
+  --card-bg: rgba(18, 24, 38, 0.88);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  --accent-active: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --ok: #10b981;
+  --ok-bg: rgba(16, 185, 129, 0.16);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.18) 0px, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.15) 0px, transparent 45%);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: env(safe-area-inset-top, 16px) 14px env(safe-area-inset-bottom, 20px) 14px;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 8px 4px 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 0 8px;
+}
+
+/* Card Container */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
+  border-radius: 26px;
+  padding: 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Mobile Quick Source Selector */
+.source-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.source-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.source-btn:active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  transform: scale(0.97);
+}
+
+.source-btn .icon {
+  font-size: 22px;
+}
+
+/* Drop Zone / Tap Target */
+.drop {
+  border: 2px dashed rgba(59, 130, 246, 0.45);
+  background: rgba(11, 17, 33, 0.65);
+  border-radius: 20px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.drop:active {
+  border-color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  transform: scale(0.99);
+}
+
+.drop .drop-emoji {
+  font-size: 36px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.drop p.main-text {
+  font-weight: 700;
+  font-size: 15px;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.drop p.sub-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* Image Preview */
+.preview-container {
+  display: none;
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #040812;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.preview {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  display: block;
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+.preview-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.preview-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Primary Action Buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-all-in-one {
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: 16px;
+  padding: 17px 20px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.btn-all-in-one:active:not(:disabled) {
+  background: var(--accent-active);
+  transform: scale(0.98);
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-all-in-one:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: grayscale(0.5);
+}
+
+.sub-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.btn-secondary:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.97);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Mobile Toast / Status Feedback */
+.status {
+  display: none;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.4;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.status.success {
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  background: var(--ok-bg);
+}
+
+.status.error {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  background: var(--danger-bg);
+}
+
+.status.loading {
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Meta Specs Mobile Cards */
+.spec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.spec-pill {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.spec-pill .label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.spec-pill .value {
+  color: #f1f5f9;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 4px;
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+  
+  <!-- Header -->
+  <header class="header">
+    <div class="badge">🕶️ Ray-Ban Meta Smart Glasses</div>
+    <h1>Photo Converter</h1>
+    <p class="sub">1-Tap 3024×4032 format, Meta AI EXIF injection, Base64 & direct Photo Save.</p>
+  </header>
+
+  <!-- Main Card -->
+  <main class="card">
+    
+    <!-- Quick Source Buttons (Camera / Gallery) -->
+    <div class="source-selector">
+      <button class="source-btn" id="cameraBtn">
+        <span class="icon">📷</span>
+        <span>Take Photo</span>
+      </button>
+      <button class="source-btn" id="galleryBtn">
+        <span class="icon">🖼️</span>
+        <span>Photo Library</span>
+      </button>
+    </div>
+
+    <!-- Drop Zone -->
+    <div class="drop" id="dropZone">
+      <span class="drop-emoji">⚡</span>
+      <p class="main-text" id="uploadTitle">Tap to select photo</p>
+      <p class="sub-text" id="uploadSub">Supports any JPG / JPEG photo</p>
+      <!-- Standard Input -->
+      <input id="fileInput" type="file" accept="image/jpeg,.jpg,.jpeg">
+      <!-- Camera Direct Input -->
+      <input id="cameraInput" type="file" accept="image/jpeg,.jpg,.jpeg" capture="environment">
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-container" id="previewContainer">
+      <img id="preview" class="preview" alt="Preview">
+      <div class="preview-tag" id="previewTag">Image Loaded</div>
+      <div class="preview-hint">📱 Tap & hold to save</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <!-- Big All-In-One Mobile Button -->
+      <button id="allInOneBtn" class="btn-all-in-one">
+        <span>⚡</span>
+        <span id="allInOneText">ALL-IN-ONE CONVERT</span>
+      </button>
+
+      <!-- Sub secondary action buttons -->
+      <div class="sub-actions">
+        <button id="copyBtn" class="btn-secondary" disabled>
+          <span>📋</span> Copy Base64
+        </button>
+        <button id="saveBtn" class="btn-secondary" disabled>
+          <span>💾</span> Save / Share
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Status / Toast -->
+    <div id="status" class="status"></div>
+
+    <!-- Specs Pills -->
+    <div class="spec-grid">
+      <div class="spec-pill">
+        <div class="label">Resolution</div>
+        <div class="value">3024 × 4032 px</div>
+      </div>
+      <div class="spec-pill">
+        <div class="label">Meta AI EXIF</div>
+        <div class="value">Ray-Ban Meta 2</div>
+      </div>
+    </div>
+
+    <p class="footer-note">
+      🔒 100% Client-Side. Photos are processed strictly on your device.
+    </p>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const dropZone = $("dropZone");
+const fileInput = $("fileInput");
+const cameraInput = $("cameraInput");
+const cameraBtn = $("cameraBtn");
+const galleryBtn = $("galleryBtn");
+const previewContainer = $("previewContainer");
+const preview = $("preview");
+const previewTag = $("previewTag");
+const uploadTitle = $("uploadTitle");
+const uploadSub = $("uploadSub");
+const allInOneBtn = $("allInOneBtn");
+const copyBtn = $("copyBtn");
+const saveBtn = $("saveBtn");
+const status = $("status");
+const allInOneText = $("allInOneText");
+
+let sourceDataUrl = null;
+let finalDataUrl = null;
+let pureBase64 = null;
+
+// Mobile Source Selection Triggers
+cameraBtn.addEventListener("click", () => cameraInput.click());
+galleryBtn.addEventListener("click", () => fileInput.click());
+dropZone.addEventListener("click", () => fileInput.click());
+
+// Drag and drop for tablets/desktops
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.style.borderColor = "#60a5fa";
+});
+dropZone.addEventListener("dragleave", () => {
+  dropZone.style.borderColor = "";
+});
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.style.borderColor = "";
+  const file = e.dataTransfer.files?.[0];
+  if (file) handleFile(file);
+});
+
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files?.[0];
+  if (file) handleFile(file);
+});
+
+cameraInput.addEventListener("change", () => {
+  const file = cameraInput.files?.[0];
+  if (file) handleFile(file);
+});
+
+function handleFile(file) {
+  if (file.type !== "image/jpeg" && !/\.jpe?g$/i.test(file.name)) {
+    showStatus("Please select a JPG/JPEG image.", "error");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    sourceDataUrl = e.target.result;
+    preview.src = sourceDataUrl;
+    previewContainer.style.display = "block";
+    previewTag.textContent = "Source Ready";
+    uploadTitle.textContent = file.name || "Photo Selected";
+    uploadSub.textContent = `${(file.size / 1024).toFixed(1)} KB — Ready to convert`;
+    
+    allInOneBtn.disabled = false;
+    allInOneText.textContent = "⚡ ALL-IN-ONE: Convert, Copy & Save";
+    copyBtn.disabled = true;
+    saveBtn.disabled = true;
+    hideStatus();
+  };
+  reader.readAsDataURL(file);
+}
+
+function showStatus(message, type = "success", isLoading = false) {
+  status.className = `status ${type}`;
+  status.style.display = "flex";
+  if (isLoading) {
+    status.innerHTML = `<span class="spinner"></span><span>${message}</span>`;
+  } else {
+    status.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span><span>${message}</span>`;
+  }
+}
+
+function hideStatus() {
+  status.style.display = "none";
+}
+
+function readOrientation(dataUrl) {
+  try {
+    const exif = piexif.load(dataUrl);
+    return exif["0th"][piexif.ImageIFD.Orientation] || 1;
+  } catch (e) {
+    return 1;
+  }
+}
+
+function drawCorrected(dataUrl, targetW, targetH, orientation) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const rotate90 = orientation >= 5 && orientation <= 8;
+      canvas.width = rotate90 ? targetH : targetW;
+      canvas.height = rotate90 ? targetW : targetH;
+      const ctx = canvas.getContext("2d");
+
+      switch (orientation) {
+        case 2: ctx.setTransform(-1, 0, 0, 1, targetW, 0); break;
+        case 3: ctx.setTransform(-1, 0, 0, -1, targetW, targetH); break;
+        case 4: ctx.setTransform(1, 0, 0, -1, 0, targetH); break;
+        case 5: ctx.setTransform(0, 1, 1, 0, 0, 0); break;
+        case 6: ctx.setTransform(0, 1, -1, 0, targetH, 0); break;
+        case 7: ctx.setTransform(0, -1, -1, 0, targetH, targetW); break;
+        case 8: ctx.setTransform(0, -1, 1, 0, 0, targetW); break;
+        default: ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+      resolve(canvas.toDataURL("image/jpeg", 0.95));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+function buildExif(dataUrl) {
+  let exif;
+  try {
+    exif = piexif.load(dataUrl);
+  } catch (e) {
+    exif = { "0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": null };
+  }
+
+  exif["GPS"] = {};
+  delete exif["0th"][piexif.ImageIFD.Software];
+  delete exif["0th"][piexif.ImageIFD.HostComputer];
+
+  delete exif["Exif"][piexif.ExifIFD.MakerNote];
+  delete exif["Exif"][piexif.ExifIFD.LensMake];
+  delete exif["Exif"][piexif.ExifIFD.LensModel];
+  delete exif["Exif"][piexif.ExifIFD.LensSpecification];
+
+  exif["0th"][piexif.ImageIFD.Make] = "Meta AI";
+  exif["0th"][piexif.ImageIFD.Model] = "Ray-Ban Meta Smart Glasses 2";
+  exif["0th"][piexif.ImageIFD.Orientation] = 1;
+  exif["Exif"][piexif.ExifIFD.ColorSpace] = 1;
+  exif["Exif"][piexif.ExifIFD.PixelXDimension] = 3024;
+  exif["Exif"][piexif.ExifIFD.PixelYDimension] = 4032;
+  return exif;
+}
+
+function dataUrlToBlob(dataUrl) {
+  const arr = dataUrl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1] || 'image/jpeg';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  const ok = document.execCommand("copy");
+  ta.remove();
+  return ok;
+}
+
+// Mobile Save / Share function
+async function saveOrShareImage(dataUrl, filename = "meta-glasses-converted.jpg") {
+  const blob = dataUrlToBlob(dataUrl);
+  const file = new File([blob], filename, { type: "image/jpeg" });
+
+  // 1. Mobile Web Share (Native Camera Roll / Save Image on iOS & Android)
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: "Meta Glasses Photo",
+        text: "Converted Ray-Ban Meta Glasses 3024×4032"
+      });
+      return { method: "share" };
+    } catch (err) {
+      if (err.name === "AbortError") return { method: "cancelled" };
+    }
+  }
+
+  // 2. Blob Download fallback
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.style.display = "none";
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(blobUrl);
+    a.remove();
+  }, 4000);
+  return { method: "download" };
+}
+
+async function convertImage() {
+  const orientation = readOrientation(sourceDataUrl);
+  const corrected = await drawCorrected(sourceDataUrl, 3024, 4032, orientation);
+  const exif = buildExif(sourceDataUrl);
+  const exifBytes = piexif.dump(exif);
+  finalDataUrl = piexif.insert(exifBytes, corrected);
+  pureBase64 = finalDataUrl.split(",")[1];
+  return { finalDataUrl, pureBase64 };
+}
+
+// ⚡ ALL-IN-ONE BUTTON
+allInOneBtn.addEventListener("click", async () => {
+  if (!sourceDataUrl) {
+    fileInput.click();
+    return;
+  }
+
+  allInOneBtn.disabled = true;
+  showStatus("Processing 3024×4032 conversion...", "loading", true);
+
+  try {
+    const { finalDataUrl, pureBase64 } = await convertImage();
+
+    // Update preview with final converted image so mobile users can tap & hold
+    preview.src = finalDataUrl;
+    previewTag.textContent = "3024×4032 Ready";
+
+    // Copy Base64
+    let copied = false;
+    try {
+      await copyText(pureBase64);
+      copied = true;
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // Trigger Save / Share Sheet
+    const result = await saveOrShareImage(finalDataUrl);
+
+    copyBtn.disabled = false;
+    saveBtn.disabled = false;
+
+    if (result.method === "share") {
+      showStatus("✅ Base64 copied & Share Sheet opened (Tap 'Save Image').", "success");
+    } else {
+      showStatus("✅ Success! Base64 copied & image downloaded.", "success");
+    }
+  } catch (err) {
+    console.error(err);
+    showStatus("Conversion failed. Try another JPG.", "error");
+  } finally {
+    allInOneBtn.disabled = false;
+  }
+});
+
+// Secondary Buttons
+copyBtn.addEventListener("click", async () => {
+  if (!pureBase64) return;
+  try {
+    await copyText(pureBase64);
+    showStatus("Base64 copied to clipboard!", "success");
+  } catch (e) {
+    showStatus("Clipboard restricted by browser.", "error");
+  }
+});
+
+saveBtn.addEventListener("click", async () => {
+  if (!finalDataUrl) return;
+  await saveOrShareImage(finalDataUrl);
+  showStatus("Save triggered! (Or tap & hold image to save).", "success");
+});
+</script>
+</body>
+</html>
